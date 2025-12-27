@@ -5,6 +5,10 @@ import uuid
 import google.generativeai as genai
 import os
 
+import streamlit as st
+st.write("🔥 NEW VERSION DEPLOYED AT CLOUD RUN 🔥")
+
+
 # ---------------- CONFIG (FIXED FOR CLOUD RUN) ----------------
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
