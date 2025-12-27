@@ -1,4 +1,6 @@
 import streamlit as st
+st.write("🔥 VERSION: NEW CLOUD RUN BUILD 🔥")
+
 from supabase import create_client
 from datetime import datetime, timedelta
 import uuid
