@@ -1,5 +1,5 @@
 import streamlit as st
-st.write("🔥 VERSION: NEW CLOUD RUN BUILD 🔥")
+
 
 from supabase import create_client
 from datetime import datetime, timedelta
@@ -7,8 +7,7 @@ import uuid
 import google.generativeai as genai
 import os
 
-import streamlit as st
-st.write("🔥 NEW VERSION DEPLOYED AT CLOUD RUN 🔥")
+
 
 
 # ---------------- CONFIG (FIXED FOR CLOUD RUN) ----------------
