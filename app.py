@@ -3,26 +3,28 @@ from supabase import create_client
 from datetime import datetime, timedelta
 import uuid
 import google.generativeai as genai
-
-# ---------------- CONFIG ----------------
 import os
 
-from dotenv import load_dotenv
-load_dotenv()
+# ---------------- CONFIG (FIXED FOR CLOUD RUN) ----------------
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    st.error("Supabase environment variables not set")
+    st.error("🚨 Backend configuration missing. Please contact admin.")
     st.stop()
 
-
-
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("models/text-bison-001")
+
+# Gemini is optional
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel("models/text-bison-001")
+else:
+    model = None
+
+# -------------------------------------------------------------
 
 st.set_page_config(page_title="Queueless India", layout="centered")
 
@@ -51,7 +53,6 @@ def get_baseline(office_id, day, slot):
     if res.data:
         return res.data[0]["avg_wait_minutes"]
 
-    # fallback: any day same slot
     fallback = supabase.table("baseline_wait_times") \
         .select("avg_wait_minutes") \
         .eq("office_id", office_id) \
@@ -100,6 +101,8 @@ def confidence_level(signal_count):
 
 
 def ai_explanation(day, slot, baseline, condition):
+    if not model:
+        return "This estimate is based on past data and recent visitor activity."
     try:
         return model.generate_content(
             f"Explain waiting time simply. Baseline {baseline} mins, condition {condition}."
@@ -126,19 +129,13 @@ st.divider()
 
 # ---------------- LOCATION SELECTION ----------------
 
-locations_res = supabase.table("locations") \
-    .select("*") \
-    .execute()
+locations_res = supabase.table("locations").select("*").execute()
 
 location_map = {
     f"{l['city']}, {l['state']}": l for l in locations_res.data
 }
 
-location_label = st.selectbox(
-    "📍 Select Location",
-    location_map.keys()
-)
-
+location_label = st.selectbox("📍 Select Location", location_map.keys())
 location = location_map[location_label]
 
 # ---------------- OFFICE SELECTION ----------------
